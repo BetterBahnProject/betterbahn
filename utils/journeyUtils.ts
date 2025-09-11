@@ -1,3 +1,5 @@
+import type { CommonJourneyParams } from "@/app/api/journeys/journeys";
+import { trpcClient } from "./TRPCProvider";
 import type { ExtractedData } from "./types";
 import type {
 	VendoJourney,
@@ -35,7 +37,9 @@ export const getJourneyLegsWithTransfers = (journey: VendoJourney) => {
 			if (leg.walking) return null;
 			const next = legs[i + 1];
 			return Object.assign({}, leg, {
-				transferTimeAfter: next?.walking ? calculateTransferTimeInMinutes(next) : 0,
+				transferTimeAfter: next?.walking
+					? calculateTransferTimeInMinutes(next)
+					: 0,
 			});
 		})
 		.filter(Boolean) as (VendoLeg & { transferTimeAfter: number })[];
@@ -71,59 +75,31 @@ export const searchForJourneys = async (
 	}
 
 	let departureTime = "";
+
 	if (date && time) {
 		departureTime = `${date}T${time}:00`;
 	}
 
-	const urlParams = new URLSearchParams({
+	const commonParams: CommonJourneyParams = {
 		from: fromStationId,
+		hasDeutschlandTicket: hasDeutschlandTicket ?? false,
+		travelClass: travelClass ? Number.parseInt(travelClass, 10) : 2,
+		bahnCard: bahnCard ? Number.parseInt(bahnCard, 10) : undefined,
+		passengerAge: passengerAge ? Number.parseInt(passengerAge, 10) : undefined,
 		to: toStationId,
-		...(departureTime && { departure: departureTime }),
+	};
+
+	if (departureTime.trim()) {
+		return await trpcClient.journeys.query({
+			type: "accurate-time",
+			...commonParams,
+			departure: new Date(departureTime),
+		});
+	}
+
+	return await trpcClient.journeys.query({
+		type: "no-accurate-time",
+		...commonParams,
+		results: 10,
 	});
-
-	// Add optional parameters
-	if (bahnCard && bahnCard !== "none") {
-		urlParams.append("bahnCard", bahnCard);
-	}
-
-	if (hasDeutschlandTicket) {
-		urlParams.append("hasDeutschlandTicket", "true");
-	}
-
-	if (passengerAge && passengerAge.trim() !== "") {
-		urlParams.append("passengerAge", passengerAge.trim());
-	}
-
-	if (travelClass) {
-		urlParams.append("travelClass", travelClass);
-	}
-
-	try {
-		const response = await fetch(`/api/journeys?${urlParams}`);
-		
-		if (!response.ok) {
-			let errorMessage = "Fehler beim Laden der Verbindungen";
-			try {
-				const data = await response.json();
-				errorMessage = data.error || errorMessage;
-			} catch {
-				// If JSON parsing fails, use a generic error message
-				errorMessage = `Server Error: ${response.status} ${response.statusText}`;
-			}
-			throw new Error(errorMessage);
-		}
-
-		const data = await response.json();
-		return data.journeys || [];
-	} catch (error) {
-		const typedError = error as { message: string };
-
-		// Re-throw with more user-friendly message if it's a network error
-		if (typedError.message.includes("fetch")) {
-			throw new Error(
-				"Netzwerkfehler: Bitte überprüfe deine Internetverbindung"
-			);
-		}
-		throw error;
-	}
 };

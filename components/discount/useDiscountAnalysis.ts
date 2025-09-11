@@ -1,16 +1,23 @@
-import { useState, useCallback } from "react";
-import { LOADING_MESSAGES, STATUS, type Status } from "./constants";
 import type { VendoJourney } from "@/utils/schemas";
+import { trpcClient } from "@/utils/TRPCProvider";
 import type { ExtractedData, ProgressInfo, SplitOption } from "@/utils/types";
+import { useCallback, useState } from "react";
+import { LOADING_MESSAGES, STATUS, type Status } from "./constants";
 
 export function useDiscountAnalysis() {
 	const [status, setStatus] = useState<Status>(STATUS.LOADING);
 	const [journeys, setJourneys] = useState<VendoJourney[]>([]);
-	const [extractedData, setExtractedData] = useState<ExtractedData | null>(null);
+	const [extractedData, setExtractedData] = useState<ExtractedData | null>(
+		null
+	);
 	const [error, setError] = useState("");
-	const [selectedJourney, setSelectedJourney] = useState<VendoJourney | null>(null);
+	const [selectedJourney, setSelectedJourney] = useState<VendoJourney | null>(
+		null
+	);
 	const [splitOptions, setSplitOptions] = useState<SplitOption[] | null>(null);
-	const [loadingMessage, setLoadingMessage] = useState(LOADING_MESSAGES.initial);
+	const [loadingMessage, setLoadingMessage] = useState(
+		LOADING_MESSAGES.initial
+	);
 	const [progressInfo, setProgressInfo] = useState<ProgressInfo | null>(null);
 
 	const analyzeSplitOptions = useCallback(
@@ -20,37 +27,20 @@ export function useDiscountAnalysis() {
 			setProgressInfo(null);
 
 			try {
-				const response = await fetch("/api/split-journey", {
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({
-						originalJourney: journey,
-						bahnCard: journeyData?.bahnCard || "none",
-						hasDeutschlandTicket: journeyData?.hasDeutschlandTicket || false,
-						passengerAge: journeyData?.passengerAge?.trim()
-							? parseInt(journeyData.passengerAge.trim(), 10)
-							: null,
-						travelClass: journeyData?.travelClass || "2",
-						useStreaming: true, // Enable streaming for progress updates
-					}),
+				const response = await trpcClient.splitJourney.query({
+					originalJourney: journey,
+					bahnCard: journeyData?.bahnCard
+						? Number.parseInt(journeyData.bahnCard, 10)
+						: undefined,
+					hasDeutschlandTicket: journeyData?.hasDeutschlandTicket || false,
+					passengerAge: journeyData?.passengerAge?.trim()
+						? parseInt(journeyData.passengerAge.trim(), 10)
+						: undefined,
+					travelClass: Number.parseInt(journeyData?.travelClass ?? "2", 10),
 				});
 
-				if (!response.ok) {
-					throw new Error("Failed to analyze split options");
-				}
-
-				// Handle Server-Sent Events
-				const reader = response.body!.getReader();
-				const decoder = new TextDecoder();
-				let buffer = "";
-
-				while (true) {
-					const { done, value } = await reader.read();
-					if (done) break;
-
-					buffer += decoder.decode(value, { stream: true });
-					const lines = buffer.split("\n");
-					buffer = lines.pop()!; // Keep incomplete line in buffer
+				for await (const value of response) {
+					const lines = value.split("\n");
 
 					for (const line of lines) {
 						if (line.startsWith("data: ")) {

@@ -1,20 +1,24 @@
 "use client";
 import { JourneyResults } from "@/components/JourneyResults";
-import { StatusBox } from "@/components/discount/StatusBox";
+import { ErrorDisplay } from "@/components/discount/ErrorDisplay";
 import { OriginalJourneyCard } from "@/components/discount/OriginalJourneyCard";
 import { SplitOptionsCard } from "@/components/discount/SplitOptionsCard";
-import { ErrorDisplay } from "@/components/discount/ErrorDisplay";
-import { useDiscountAnalysis } from "@/components/discount/useDiscountAnalysis";
+import { StatusBox } from "@/components/discount/StatusBox";
 import { LOADING_MESSAGES, STATUS } from "@/components/discount/constants";
-import { fetchAndValidateJson } from "@/utils/fetchAndValidateJson";
+import { useDiscountAnalysis } from "@/components/discount/useDiscountAnalysis";
+import { trpcClient } from "@/utils/TRPCProvider";
 import { searchForJourneys } from "@/utils/journeyUtils";
-import type { VendoJourney } from "@/utils/schemas";
+import type { ValidatedVendoJourney } from "@/utils/schemas";
+import type { ExtractedData } from "@/utils/types";
+import { type TRPCClientError } from "@trpc/client";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect } from "react";
 import { z } from "zod/v4";
+import type { AppRouter } from "../api/[trpc]/route";
 
 function Discount() {
 	const searchParams = useSearchParams();
+
 	const {
 		status,
 		journeys,
@@ -34,11 +38,11 @@ function Discount() {
 		handleJourneySelect,
 	} = useDiscountAnalysis();
 
-	// Effects
 	useEffect(() => {
 		const initializeFlow = async () => {
 			try {
 				const urlFromParams = searchParams.get("url");
+
 				if (!urlFromParams) {
 					throw new Error("Keine URL zum Parsen angegeben.");
 				}
@@ -46,28 +50,11 @@ function Discount() {
 				// Parse URL
 				setLoadingMessage(LOADING_MESSAGES.parsing);
 
-				// yes, the following is some ugly and probably redundant client-side validation, but imo this will help us progressively narrow down certain bugs
-				const parseUrlRequest = await fetchAndValidateJson({
-					url: "/api/parse-url",
-					method: "POST",
-					body: { url: urlFromParams },
-					schema: z.object({
-						success: z.literal(true),
-						journeyDetails: z.object({
-							fromStation: z.string().nullable().optional(),
-							toStation: z.string().nullable().optional(),
-							fromStationId: z.string().nullable().optional(),
-							toStationId: z.string().nullable().optional(),
-							date: z.unknown().optional(),
-							time: z.string().nullable().optional(),
-							class: z.number().nullable().optional(),
-						}),
-					}),
+				const journeyDetails = await trpcClient.parseUrl.query({
+					url: urlFromParams,
 				});
 
-				const { journeyDetails } = parseUrlRequest.data;
-
-				const journeyData = {
+				const journeyData: ExtractedData = {
 					fromStation: journeyDetails.fromStation,
 					toStation: journeyDetails.toStation,
 					fromStationId: journeyDetails.fromStationId,
@@ -78,7 +65,7 @@ function Discount() {
 						journeyDetails.class?.toString() ||
 						searchParams.get("travelClass") ||
 						"2",
-					bahnCard: searchParams.get("bahnCard") || "none",
+					bahnCard: searchParams.get("bahnCard") ?? undefined,
 					hasDeutschlandTicket:
 						searchParams.get("hasDeutschlandTicket") === "true",
 					passengerAge: searchParams.get("passengerAge") || "",
@@ -88,9 +75,12 @@ function Discount() {
 
 				// Search for journeys
 				setLoadingMessage(LOADING_MESSAGES.searching);
+
 				const foundJourneys = (await searchForJourneys(
 					journeyData
-				)) as VendoJourney[];
+				)) as ValidatedVendoJourney[];
+
+				setLoadingMessage("");
 
 				if (foundJourneys.length === 1) {
 					setLoadingMessage(LOADING_MESSAGES.single_journey_flow);
@@ -107,6 +97,17 @@ function Discount() {
 				const typedErr = err as { message: string };
 				setError(typedErr.message);
 				setStatus(STATUS.ERROR);
+
+				if (
+					z.object({ name: z.literal("TRPCClientError") }).safeParse(err)
+						.success
+				) {
+					const trpcClientError = err as TRPCClientError<AppRouter>;
+
+					if (trpcClientError.data?.zodError) {
+						setError(trpcClientError.data.zodError);
+					}
+				}
 			}
 		};
 

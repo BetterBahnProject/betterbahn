@@ -12,11 +12,18 @@
     "oxlint": "oxlint"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.87.4",
+    "@trpc/client": "^11.5.1",
+    "@trpc/next": "^11.5.1",
+    "@trpc/react-query": "^11.5.1",
+    "@trpc/server": "^11.5.1",
+    "@trpc/tanstack-react-query": "^11.5.1",
     "db-hafas-stations": "^2.0.0",
     "db-vendo-client": "^6.8.2",
     "next": "15.5.4",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "superjson": "^2.2.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -28,12 +35,12 @@
     "typescript": "^5.9.2",
     "zod": "^4.1.12"
   },
-	"devEngines": {
-		"packageManager": {
-			"name": "pnpm",
-			"version": "10.15.0",
-			"onFail": "download"
-		}
-	},
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "10.15.0",
+      "onFail": "download"
+    }
+  },
   "packageManager": "pnpm@10.15.0+sha512.486ebc259d3e999a4e8691ce03b5cac4a71cbeca39372a9b762cb500cfdf0873e2cb16abe3d951b1ee2cf012503f027b98b6584e4df22524e0c7450d9ec7aa7b"
 }
