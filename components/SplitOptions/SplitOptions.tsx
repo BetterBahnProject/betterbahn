@@ -1,12 +1,11 @@
 "use client";
 
-import type { VendoJourney } from "@/utils/schemas";
-import type { SplitOption } from "@/utils/types";
-import { useState } from "react";
-import { getStationName } from "@/utils/journeyUtils";
+import type { SplitAnalysis } from "@/app/api/journeys/analyzeSingleSplit";
 import { formatDuration, formatTime } from "@/utils/formatUtils";
-
+import { getStationName } from "@/utils/journeyUtils";
 import { formatPriceDE } from "@/utils/priceUtils";
+import type { VendoJourney } from "@/utils/schemas";
+import { useState } from "react";
 import { getOptionsToShow } from "./getOptionsToShow";
 import { Segment } from "./Segment";
 
@@ -17,9 +16,9 @@ export const SplitOptions = ({
 	loadingSplits,
 	hasDeutschlandTicket,
 	travelClass,
-	bahnCard
+	bahnCard,
 }: {
-	splitOptions: SplitOption[];
+	splitOptions: SplitAnalysis[];
 	originalJourney: VendoJourney;
 	loadingSplits: unknown;
 	hasDeutschlandTicket: boolean;
@@ -47,7 +46,9 @@ export const SplitOptions = ({
 	if (!splitOptions || splitOptions.length === 0) {
 		return (
 			<div className="text-center py-4">
-				<p className="text-foreground/70">Keine günstigeren Split-Ticket Optionen gefunden.</p>
+				<p className="text-foreground/70">
+					Keine günstigeren Split-Ticket Optionen gefunden.
+				</p>
 				<p className="text-xs text-foreground/60 mt-1">
 					Die direkte Verbindung scheint die kostengünstigste Option zu sein.
 				</p>
@@ -74,7 +75,8 @@ export const SplitOptions = ({
 									<div className="text-sm">
 										⚠️ Preisberechnung für
 										{splitPricing.hasFlixTrains ? " FlixTrain und" : ""}{" "}
-										Regionalverkehr nicht möglich. Manuelle Prüfung erforderlich.
+										Regionalverkehr nicht möglich. Manuelle Prüfung
+										erforderlich.
 									</div>
 								</div>
 							</div>
@@ -153,10 +155,16 @@ export const SplitOptions = ({
 													<>
 														<div className="font-bold text-lg text-green-600">
 															Spare{" "}
-															{formatPriceDE(splitPricing.adjustedSavings)}
+															{splitPricing.adjustedSavings === null
+																? "?"
+																: formatPriceDE(splitPricing.adjustedSavings)}
 														</div>
 														<div className="text-xl font-bold text-foreground">
-															{formatPriceDE(splitPricing.adjustedTotalPrice)}
+															{splitPricing.adjustedTotalPrice === null
+																? "?"
+																: formatPriceDE(
+																		splitPricing.adjustedTotalPrice
+																  )}
 															{splitPricing.hasPartialPricing && (
 																<span className="text-orange-600 ml-1">*</span>
 															)}
@@ -168,7 +176,8 @@ export const SplitOptions = ({
 
 										<div className="text-sm text-foreground/60 my-2 pl-1 flex items-center">
 											<span>
-												{formatDuration({ legs: [departureLeg, arrivalLeg] }) || "Dauer unbekannt"}
+												{formatDuration({ legs: [departureLeg, arrivalLeg] }) ||
+													"Dauer unbekannt"}
 											</span>
 											<span className="mx-2">·</span>
 											<span>
@@ -246,9 +255,9 @@ export const SplitOptions = ({
 										</div>
 										{splitPricing.hasPartialPricing && (
 											<div className="mt-3 text-xs text-foreground p-2 bg-background rounded-md border border-orange-200">
-												* Einige Segmente haben unbekannte Preise (z.B. Regional-
-												züge, FlixTrain). Der Gesamtpreis und die Ersparnis basieren
-												auf verfügbaren Daten.
+												* Einige Segmente haben unbekannte Preise (z.B.
+												Regional- züge, FlixTrain). Der Gesamtpreis und die
+												Ersparnis basieren auf verfügbaren Daten.
 											</div>
 										)}
 									</div>

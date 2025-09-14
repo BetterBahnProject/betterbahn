@@ -1,27 +1,37 @@
 import { incrementApiCount } from "@/utils/apiCounter";
-import { vendoJourneySchema, type VendoJourney } from "@/utils/schemas";
 import type { SplitPoint } from "@/utils/types";
-import { createClient } from "db-vendo-client";
-import { profile as dbProfile } from "db-vendo-client/p/db/index";
-import { z } from "zod/v4";
-import type { QueryOptions } from "../splitJourney/QueryOptions";
-import { createSplitResult } from "../splitJourney/createSplitResult";
-import { findMatchingJourney } from "../splitJourney/findMatchingJourney";
+import { type SearchJourneysOptions } from "db-vendo-client";
+import { data as loyaltyCards } from "db-vendo-client/format/loyalty-cards";
+import type { SplitJourneyInput } from "../splitJourney/splitJourney";
+import { fetchJourney } from "./fetchJourney";
 
-const client = createClient(dbProfile, "mail@lukasweihrauch.de");
+const MIN_SINGLE_SAVINGS_FACTOR = 1; // Preis muss < original * 0.98 sein
 
-// Split Analysis Functions
 export async function analyzeSingleSplit(
-	originalJourney: VendoJourney,
-	splitPoint: SplitPoint,
-	queryOptions: QueryOptions,
-	originalPrice: number
+	input: SplitJourneyInput,
+	splitPoint: SplitPoint
 ) {
-	const origin = originalJourney.legs[0].origin;
-	const destination =
-		originalJourney.legs[originalJourney.legs.length - 1].destination;
-	const originalDeparture = new Date(originalJourney.legs[0].departure);
-	const splitDeparture = new Date(splitPoint.departure);
+	const origin = input.originalJourney.legs.at(0)!.origin;
+	const destination = input.originalJourney.legs.at(-1)!.destination;
+
+	const queryOptions: SearchJourneysOptions = {
+		results: 1,
+		stopovers: true,
+		firstClass: input.travelClass === 1,
+		notOnlyFastRoutes: true,
+		remarks: true,
+		transfers: 3,
+		age: input.passengerAge,
+		deutschlandTicketDiscount: input.hasDeutschlandTicket,
+		loyaltyCard:
+			input.bahnCard && [25, 50, 100].includes(input.bahnCard)
+				? {
+						type: loyaltyCards.BAHNCARD,
+						discount: input.bahnCard,
+						class: input.travelClass || 2,
+				  }
+				: undefined,
+	};
 
 	try {
 		// Increment API counters for both segments
@@ -34,76 +44,60 @@ export async function analyzeSingleSplit(
 			`${splitPoint.station?.name} → ${destination?.name}`
 		);
 
-		// Schema validation at entry point ensures origin/destination IDs exist
-
-		// Make both API calls in parallel using Promise.all
-		const [firstSegmentUntyped, secondSegmentUntyped] = await Promise.all([
-			client.journeys(origin!.id, splitPoint.station.id, {
-				...queryOptions,
-				departure: originalDeparture,
+		const [firstJourney, secondJourney] = await Promise.all([
+			fetchJourney({
+				from: origin!.id,
+				to: splitPoint.station.id,
+				queryOptions,
+				targetDeparture: input.originalJourney.legs.at(0)!.departure,
 			}),
-
-			client.journeys(splitPoint.station.id, destination!.id, {
-				...queryOptions,
-				departure: splitDeparture,
+			fetchJourney({
+				from: splitPoint.station.id,
+				to: destination!.id,
+				queryOptions,
+				targetDeparture: splitPoint.departure,
 			}),
 		]);
 
-		const clientJourneySchema = z.object({
-			journeys: z.array(vendoJourneySchema),
-		});
-
-		const firstSegment = clientJourneySchema.parse(firstSegmentUntyped);
-		const secondSegment = clientJourneySchema.parse(secondSegmentUntyped);
-
 		if (
-			firstSegment.journeys === undefined ||
-			secondSegment.journeys === undefined
+			!firstJourney ||
+			!secondJourney ||
+			(firstJourney.price?.amount === undefined &&
+				secondJourney.price?.amount === undefined)
 		) {
 			return null;
 		}
 
-		const firstJourney = findMatchingJourney(
-			firstSegment.journeys,
-			originalDeparture
-		);
+		let totalPrice: number | null = null; // null = unknown
 
-		if (!firstJourney) {
-			return null;
+		// TODO this MIN_SINGLE_SAVINGS filter can probably be moved to frontend, no filtering on backend necessary
+		if (
+			firstJourney.price?.amount !== undefined &&
+			secondJourney.price?.amount !== undefined
+		) {
+			totalPrice = firstJourney.price.amount + secondJourney.price.amount;
+			const originalPrice = input.originalJourney.price?.amount || 0;
+
+			if (totalPrice >= originalPrice * MIN_SINGLE_SAVINGS_FACTOR) {
+				return null;
+			}
 		}
 
-		const secondJourney = findMatchingJourney(
-			secondSegment.journeys,
-			splitDeparture
-		);
-
-		if (!secondJourney) {
-			return null;
-		}
-
-		// Calculate pricing
-		const firstPrice = firstJourney.price?.amount || 0;
-		const secondPrice = secondJourney.price?.amount || 0;
-		const totalPrice = firstPrice + secondPrice;
-
-		if (totalPrice > 0 && totalPrice < originalPrice) {
-			return createSplitResult(
-				"single",
-				[splitPoint.station],
-				[firstJourney, secondJourney],
-				totalPrice,
-				originalPrice,
-				splitPoint.trainLine
-			);
-		}
-
-		return null;
+		return {
+			splitStations: [splitPoint.station],
+			segments: [firstJourney, secondJourney],
+		} as const;
 	} catch (error) {
 		const typedError = error as { message: string };
 		console.log(
 			`Single split analysis error at ${splitPoint.station.name}:`,
 			typedError.message
 		);
-		throw error; // Re-throw to be handled by Promise.allSettled
+		throw error;
 	}
 }
+
+export type SplitAnalysis = Exclude<
+	Awaited<ReturnType<typeof analyzeSingleSplit>>,
+	null
+>;

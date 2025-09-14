@@ -22,10 +22,7 @@ export const getStationName = (stop?: VendoOriginOrDestination) =>
 
 export const calculateTransferTimeInMinutes = (leg: VendoLeg) => {
 	if (!leg.walking || !leg.departure || !leg.arrival) return 0;
-	return Math.round(
-		(new Date(leg.arrival).getTime() - new Date(leg.departure).getTime()) /
-			60000
-	);
+	return Math.round((leg.arrival.getTime() - leg.departure.getTime()) / 60000);
 };
 
 // Filter out walking legs and get non-walking legs with transfer times

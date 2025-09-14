@@ -1,6 +1,7 @@
+import type { SplitAnalysis } from "@/app/api/journeys/analyzeSingleSplit";
 import type { VendoJourney } from "@/utils/schemas";
 import { trpcClient } from "@/utils/TRPCProvider";
-import type { ExtractedData, ProgressInfo, SplitOption } from "@/utils/types";
+import type { ExtractedData, ProgressInfo } from "@/utils/types";
 import { useCallback, useState } from "react";
 import { LOADING_MESSAGES, STATUS, type Status } from "./constants";
 
@@ -14,20 +15,20 @@ export function useDiscountAnalysis() {
 	const [selectedJourney, setSelectedJourney] = useState<VendoJourney | null>(
 		null
 	);
-	const [splitOptions, setSplitOptions] = useState<SplitOption[] | null>(null);
+	const [splitOptions, setSplitOptions] = useState<SplitAnalysis[] | null>(null);
 	const [loadingMessage, setLoadingMessage] = useState(
 		LOADING_MESSAGES.initial
 	);
 	const [progressInfo, setProgressInfo] = useState<ProgressInfo | null>(null);
 
 	const analyzeSplitOptions = useCallback(
-		async (journey: VendoJourney, journeyData: ExtractedData) => {
+		(journey: VendoJourney, journeyData: ExtractedData) => {
 			setStatus(STATUS.ANALYZING);
 			setLoadingMessage(LOADING_MESSAGES.analyzing);
 			setProgressInfo(null);
 
-			try {
-				const response = await trpcClient.splitJourney.query({
+			trpcClient.splitJourney.subscribe(
+				{
 					originalJourney: journey,
 					bahnCard: journeyData?.bahnCard
 						? Number.parseInt(journeyData.bahnCard, 10)
@@ -37,54 +38,67 @@ export function useDiscountAnalysis() {
 						? parseInt(journeyData.passengerAge.trim(), 10)
 						: undefined,
 					travelClass: Number.parseInt(journeyData?.travelClass ?? "2", 10),
-				});
+				},
+				{
+					onData: (data) => {
+						switch (data.type) {
+							case "start": {
+								setLoadingMessage("Analyse gestartet...");
 
-				for await (const value of response) {
-					const lines = value.split("\n");
+								setProgressInfo({
+									total: data.total,
+									checked: 0,
+								});
 
-					for (const line of lines) {
-						if (line.startsWith("data: ")) {
-							try {
-								const jsonData = line.slice(6).trim();
-								if (!jsonData) continue; // Skip empty data lines
-
-								const data = JSON.parse(jsonData);
-
-								if (data.type === "progress") {
-									setProgressInfo({
-										checked: data.checked,
-										total: data.total,
-										currentStation: data.currentStation,
-									});
-									setLoadingMessage(data.message);
-								} else if (data.type === "complete") {
-									setSplitOptions(data.splitOptions || []);
-									setStatus(STATUS.DONE);
-									setProgressInfo(null);
-								} else if (data.type === "error") {
-									throw new Error(data.error);
-								}
-							} catch (parseError) {
-								console.error(
-									"Error parsing SSE data:",
-									parseError,
-									"Line:",
-									line
+								break;
+							}
+							case "processing": {
+								setLoadingMessage(
+									`Prüfe ${data.currentStation}...`
 								);
-								// Continue processing other lines instead of failing completely
+
+								setProgressInfo({
+									total: progressInfo!.total,
+									checked: data.checked,
+									currentStation: data.currentStation,
+								});
+
+								break;
+							}
+							case "current-done": {
+								setLoadingMessage(
+									data.checked === data.total
+										? "Analyse abgeschlossen"
+										: `${progressInfo!.checked + 1}/${progressInfo!.total} Stationen geprüft`
+								);
+
+								setProgressInfo({
+									total: progressInfo!.total,
+									checked: progressInfo!.checked + 1,
+									currentStation: progressInfo!.currentStation
+								})
+
+								break;
+							}
+							case "complete": {
+								setSplitOptions(data.splitOptions);
+								setStatus(STATUS.DONE);
+								setProgressInfo(null);
+								break;
 							}
 						}
-					}
+					},
+					onError(err) {
+						const typedErr = err as { message?: string };
+						console.error("Error analyzing split options:", err);
+						setError(
+							typedErr.message || "Fehler bei der Analyse der Split-Optionen."
+						);
+						setStatus(STATUS.ERROR);
+						setProgressInfo(null);
+					},
 				}
-			} catch (err) {
-				const typedErr = err as { message?: string };
-				console.error("Error analyzing split options:", err);
-				setError(
-					typedErr.message || "Fehler bei der Analyse der Split-Optionen."
-				);
-				setStatus(STATUS.ERROR);
-				setProgressInfo(null);
-			}
+			);
 		},
 		[]
 	);

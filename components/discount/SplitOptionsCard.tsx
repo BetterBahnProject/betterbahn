@@ -1,6 +1,7 @@
+import type { SplitAnalysis } from "@/app/api/journeys/analyzeSingleSplit";
 import { SplitOptions } from "@/components/SplitOptions/SplitOptions";
-import type { ExtractedData, SplitOption } from "@/utils/types";
 import type { VendoJourney } from "@/utils/schemas";
+import type { ExtractedData } from "@/utils/types";
 
 // Status constants
 const STATUS = {
@@ -14,7 +15,7 @@ const STATUS = {
 type Status = (typeof STATUS)[keyof typeof STATUS];
 
 interface SplitOptionsCardProps {
-	splitOptions?: SplitOption[];
+	splitOptions?: SplitAnalysis[];
 	extractedData?: ExtractedData;
 	selectedJourney?: VendoJourney;
 	status?: Status;

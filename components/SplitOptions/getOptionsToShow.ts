@@ -1,18 +1,20 @@
-import type { SplitOption } from "@/utils/types";
-import { calculateSplitOptionPricing } from "./calculateSplitOptionPricing";
+import type { SplitAnalysis } from "@/app/api/journeys/analyzeSingleSplit";
 import type { VendoJourney } from "@/utils/schemas";
+import { calculateSplitOptionPricing } from "./calculateSplitOptionPricing";
 
 /** Determine which split options to show based on pricing availability */
 export const getOptionsToShow = ({
 	splitOptions,
 	hasDeutschlandTicket,
-	originalJourney
+	originalJourney,
 }: {
-	splitOptions: SplitOption[];
-	hasDeutschlandTicket: boolean
-	originalJourney: VendoJourney
+	splitOptions: SplitAnalysis[];
+	hasDeutschlandTicket: boolean;
+	originalJourney: VendoJourney;
 }) => {
-	if (!splitOptions || splitOptions.length === 0) return [];
+	if (splitOptions.length === 0) {
+		return [];
+	}
 
 	// Calculate pricing for all options first
 	const optionsWithPricing = splitOptions.map((option) => ({
@@ -26,7 +28,8 @@ export const getOptionsToShow = ({
 
 	// Sort by savings (highest first)
 	const sortedOptions = optionsWithPricing.sort(
-		(a, b) => b.pricing.adjustedSavings - a.pricing.adjustedSavings
+		(a, b) =>
+			(b.pricing.adjustedSavings ?? 0) - (a.pricing.adjustedSavings ?? 0)
 	);
 
 	// If user has Deutschland-Ticket, always show only the cheapest option

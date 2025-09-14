@@ -33,31 +33,33 @@ const vendoLineSchema = z.object({
 
 const originOrDestinationSchema = vendoStationSchema
 	.or(vendoStopSchema)
-	.or(vendoLocationSchema)
-	.optional();
-
-// Required origin/destination for journey validation
-const requiredOriginOrDestinationSchema = vendoStationSchema
-	.or(vendoStopSchema)
 	.or(vendoLocationSchema);
 
-export type VendoOriginOrDestination = z.infer<
-	typeof originOrDestinationSchema
->;
+export type VendoOriginOrDestination =
+	| z.infer<typeof originOrDestinationSchema>
+	| undefined;
+
+/**
+ * allows parent schemas to be used with both
+ * vendo-client (outputs string dates) as well as
+ * tRPC (uses SuperJSON, feeding real Date objects into schema)
+ */
+const dateOrDateStringSchema = z
+	.string()
+	.transform((s) => new Date(s))
+	.or(z.date());
 
 const stopoverSchema = z.object({
-	arrival: z.unknown().optional(),
-	departure: z.unknown().optional(),
+	arrival: dateOrDateStringSchema.optional(),
+	departure: dateOrDateStringSchema.optional(),
 	stop: vendoStopSchema.optional(),
 	loadFactor: z.unknown(),
 });
 
-const vendoLegSchema = z.object({
-	origin: originOrDestinationSchema,
-	destination: originOrDestinationSchema,
-	departure: z.string(),
+const commonLegSchema = z.object({
+	departure: dateOrDateStringSchema,
 	line: vendoLineSchema.optional(),
-	arrival: z.string(),
+	arrival: dateOrDateStringSchema,
 	mode: z.string().optional(),
 	duration: z.unknown(),
 	walking: z.unknown(),
@@ -66,6 +68,11 @@ const vendoLegSchema = z.object({
 	delay: z.number().optional(),
 	cancelled: z.boolean().optional(),
 	stopovers: z.array(stopoverSchema).optional(),
+});
+
+const vendoLegSchema = commonLegSchema.extend({
+	origin: originOrDestinationSchema.optional(),
+	destination: originOrDestinationSchema.optional(),
 });
 
 export type VendoLeg = z.infer<typeof vendoLegSchema>;
@@ -77,20 +84,9 @@ export const vendoJourneySchema = z.object({
 });
 
 // Schema for journeys that require valid origin/destination IDs
-const validatedVendoLegSchema = z.object({
-	origin: requiredOriginOrDestinationSchema,
-	destination: requiredOriginOrDestinationSchema,
-	departure: z.string(),
-	line: vendoLineSchema.optional(),
-	arrival: z.string(),
-	mode: z.string().optional(),
-	duration: z.unknown(),
-	walking: z.unknown(),
-	departurePlatform: z.string().nullable().optional(),
-	arrivalPlatform: z.string().nullable().optional(),
-	delay: z.number().optional(),
-	cancelled: z.boolean().optional(),
-	stopovers: z.array(stopoverSchema).optional(),
+const validatedVendoLegSchema = commonLegSchema.extend({
+	origin: originOrDestinationSchema,
+	destination: originOrDestinationSchema,
 });
 
 export const validatedVendoJourneySchema = z.object({

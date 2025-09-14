@@ -1,10 +1,9 @@
 "use client";
 
-import type { VendoJourney } from "@/utils/schemas";
-import { formatPriceDE } from "@/utils/priceUtils";
-import { getTransferStations } from "./getTransferStations";
 import { formatTime } from "@/utils/formatUtils";
-import { formatDate } from "./journey-card-utils";
+import { formatPriceDE } from "@/utils/priceUtils";
+import type { VendoJourney } from "@/utils/schemas";
+import { getTransferStations } from "./getTransferStations";
 import { JourneyDuration } from "./JourneyDuration";
 import { LegDetails } from "./LegDetails";
 
@@ -23,9 +22,10 @@ export const JourneyCard = ({
 	const transferCountWithoutWalking = Math.max(0, nonWalkingLegs.length - 1);
 	const transferStationsWithoutWalking = getTransferStations(nonWalkingLegs);
 
-	const priceDisplay = journey.price?.amount === undefined
-		? "Preis auf Anfrage"
-		: formatPriceDE(journey.price.amount);
+	const priceDisplay =
+		journey.price?.amount === undefined
+			? "Preis auf Anfrage"
+			: formatPriceDE(journey.price.amount);
 
 	return (
 		<div
@@ -53,7 +53,9 @@ export const JourneyCard = ({
 					<div className="text-sm text-foreground/60">
 						<JourneyDuration journey={journey} />
 					</div>
-					<div className="text-lg font-bold text-foreground">{priceDisplay}</div>
+					<div className="text-lg font-bold text-foreground">
+						{priceDisplay}
+					</div>
 				</div>
 			</div>
 
@@ -100,8 +102,11 @@ export const JourneyCard = ({
 						<JourneyDuration journey={journey} />
 					</div>
 					<div className="text-xs text-blue-600">
-						{formatDate(firstLeg?.departure)} •{" "}
-						{formatTime(firstLeg?.departure)}-{formatTime(lastLeg?.arrival)}
+						{firstLeg?.departure.toLocaleDateString("de-DE", {
+							day: "2-digit",
+							month: "2-digit",
+						})}{" "}
+						• {formatTime(firstLeg?.departure)}-{formatTime(lastLeg?.arrival)}
 					</div>
 				</div>
 			</div>

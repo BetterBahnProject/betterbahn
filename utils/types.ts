@@ -1,4 +1,4 @@
-import type { VendoJourney, VendoOriginOrDestination, VendoStation } from "@/utils/schemas";
+import type { VendoStation } from "@/utils/schemas";
 
 export interface ExtractedData {
 	fromStationId?: string | null;
@@ -15,13 +15,6 @@ export interface ExtractedData {
 	error?: unknown;
 }
 
-export interface SplitOption {
-	segments: VendoJourney[];
-	totalPrice?: number;
-	savings?: number;
-	splitStations: VendoOriginOrDestination[];
-}
-
 export interface ProgressInfo {
 	checked: number;
 	total: number;
@@ -30,13 +23,13 @@ export interface ProgressInfo {
 }
 
 export interface TrainLine {
-	name?: string
-	product?: string
+	name?: string;
+	product?: string;
 }
 
 export interface SplitPoint {
-	departure: string;
-	arrival: string;
+	departure: Date;
+	arrival: Date;
 	station: VendoStation;
 	trainLine?: TrainLine;
 	loadFactor?: unknown;

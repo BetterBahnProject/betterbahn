@@ -96,7 +96,7 @@ export const journeys = t.procedure
 				const endStationMatches = lastLeg.destination?.id === input.to;
 
 				// Check if departure time matches (within 1 minute tolerance for exact time matching)
-				const journeyDeparture = new Date(firstLeg.departure);
+				const journeyDeparture = firstLeg.departure;
 				const timeDifference = Math.abs(
 					journeyDeparture.getTime() - targetDepartureTime.getTime()
 				);
@@ -191,9 +191,7 @@ export const journeys = t.procedure
 
 			// Sort by departure time
 			uniqueJourneys.sort(
-				(a, b) =>
-					new Date(a.legs[0].departure).getTime() -
-					new Date(b.legs[0].departure).getTime()
+				(a, b) => a.legs[0].departure.getTime() - b.legs[0].departure.getTime()
 			);
 
 			allJourneys = uniqueJourneys;

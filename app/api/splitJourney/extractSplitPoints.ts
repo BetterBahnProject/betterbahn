@@ -1,6 +1,7 @@
 import type { VendoJourney } from "@/utils/schemas";
 import type { SplitPoint, TrainLine } from "@/utils/types";
 import { VERBOSE } from "./splitJourney";
+import { TRPCError } from "@trpc/server";
 
 export function extractSplitPoints(journey: VendoJourney) {
 	const map = new Map<string, SplitPoint>();
@@ -30,8 +31,8 @@ export function extractSplitPoints(journey: VendoJourney) {
 
 				map.set(s.stop.id, {
 					station: { id: s.stop.id, name: s.stop.name || "" },
-					arrival: typeof s.arrival === "string" ? s.arrival : "",
-					departure: typeof s.departure === "string" ? s.departure : "",
+					arrival: s.arrival,
+					departure: s.departure,
 					trainLine,
 					loadFactor: s.loadFactor,
 					legIndex,
@@ -42,6 +43,13 @@ export function extractSplitPoints(journey: VendoJourney) {
 	});
 
 	const uniqueStops = Array.from(map.values());
+
+	if (uniqueStops.length === 0) {
+		throw new TRPCError({
+			code: "INTERNAL_SERVER_ERROR",
+			message: "No split points found",
+		});
+	}
 
 	if (VERBOSE) {
 		console.log(`Extracted ${uniqueStops.length} unique split candidates.`);
