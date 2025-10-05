@@ -1,4 +1,8 @@
 {
+	"env": {
+		"browser": true,
+		"node": true
+	},
 	"categories": {
 		"correctness": "error",
 		"nursery": "warn",
@@ -8,10 +12,15 @@
 	"rules": {
 		"max-lines-per-function": "off",
 		"max-lines": "off",
-		"max-depth": "off"
+		"max-depth": "off",
+		"eqeqeq": ["error", "always", { "null": "ignore" }]
 	},
-	"env": {
-		"browser": true,
-		"node": true
-	}
+	"overrides": [
+		{
+			"files": ["next-env.d.ts"],
+			"rules": {
+				"triple-slash-reference": "off"
+			}
+		}
+	]
 }
