@@ -10,6 +10,14 @@
 		"max-lines": "off",
 		"max-depth": "off"
 	},
+	"overrides": [
+		{
+			"files": ["next-env.d.ts"],
+			"rules": {
+				"triple-slash-reference": "off"
+			}
+		}
+	],
 	"env": {
 		"browser": true,
 		"node": true

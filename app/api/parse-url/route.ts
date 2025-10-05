@@ -1,8 +1,7 @@
-import { fetchAndValidateJson } from "@/utils/fetchAndValidateJson";
-import { parseHinfahrtReconWithAPI } from "@/utils/parseHinfahrtRecon";
-import { vbidSchema } from "@/utils/schemas";
+import { ReconResponse, VerbindungResponse } from "@/utils/schemas";
 import type { ExtractedData } from "@/utils/types";
 import { apiErrorHandler } from "../_lib/error-handler";
+import { getReconAndVerbindungenBrowserResponses } from "../_lib/browser";
 
 // POST-Route für URL-Parsing
 const handler = async (request: Request) => {
@@ -15,13 +14,26 @@ const handler = async (request: Request) => {
 			{ status: 400 }
 		);
 	}
+	const vbid = new URL(url).searchParams.get("vbid");
+	if (!vbid) {
+		return Response.json(
+			{ error: "URL is missing required vbid parameter" },
+			{ status: 400 }
+		);
+	}
 
-	const journeyDetails = extractJourneyDetails(
-		await getResolvedUrlBrowserless(url)
-	);
-
-	if ("error" in journeyDetails) {
-		return Response.json({ error: journeyDetails.error });
+	let journeyDetails: ExtractedData;
+	try {
+		journeyDetails = await extractJourneyDetailsByVbid(vbid);
+	} catch (error) {
+		console.error(
+			`❌ Error extracting journey details by vbid ${vbid}:`,
+			error
+		);
+		return Response.json(
+			{ error: "Failed to extract journey details." },
+			{ status: 500 }
+		);
 	}
 
 	if (!journeyDetails.fromStationId || !journeyDetails.toStationId) {
@@ -78,56 +90,57 @@ const parseDateTime = (value: string | null) => {
 	return { date: value };
 };
 
-function extractJourneyDetails(url: string) {
-	try {
-		const urlObj = new URL(url);
-		const hash = urlObj.hash;
+async function extractJourneyDetailsByVbid(
+	vbid: string
+): Promise<ExtractedData> {
+	const [reconResponse, vbidResponse] =
+		await getReconAndVerbindungenBrowserResponses(vbid);
+	const journeySearchUrl = buildJourneySearchUrl(reconResponse, vbidResponse);
+	return extractJourneyDetails(journeySearchUrl);
+}
 
-		const details: ExtractedData = {
-			fromStation: null,
-			fromStationId: null,
-			toStation: null,
-			toStationId: null,
-			date: null,
-			time: null,
-			class: null,
-		};
+function extractJourneyDetails(url: string): ExtractedData {
+	const urlObj = new URL(url);
+	const hash = urlObj.hash;
 
-		// Extract from hash parameters (consistent approach)
-		const params = new URLSearchParams(hash.replace("#", ""));
+	const details: ExtractedData = {
+		fromStation: null,
+		fromStationId: null,
+		toStation: null,
+		toStationId: null,
+		date: null,
+		time: null,
+		class: null,
+	};
 
-		const soidValue = params.get("soid");
-		const zoidValue = params.get("zoid");
-		const dateValue = params.get("hd");
-		const timeValue = params.get("ht");
-		const classValue = params.get("kl");
+	// Extract from hash parameters (consistent approach)
+	const params = new URLSearchParams(hash.replace("#", ""));
 
-		if (soidValue) {
-			details.fromStationId = extractStationId(soidValue);
-			details.fromStation = extractStationName(soidValue);
-		}
+	const soidValue = params.get("soid");
+	const zoidValue = params.get("zoid");
+	const dateValue = params.get("hd");
+	const timeValue = params.get("ht");
+	const classValue = params.get("kl");
 
-		if (zoidValue) {
-			details.toStationId = extractStationId(zoidValue);
-			details.toStation = extractStationName(zoidValue);
-		}
-
-		// Handle date/time extraction
-		const dateTimeInfo = parseDateTime(dateValue);
-		if (dateTimeInfo.date) details.date = dateTimeInfo.date;
-		if (dateTimeInfo.time && !details.time) details.time = dateTimeInfo.time;
-		if (timeValue && !details.time) details.time = timeValue;
-
-		if (classValue) details.class = parseInt(classValue, 10);
-
-		return details;
-	} catch (error) {
-		console.error("❌ Error extracting journey details:", error);
-		return {
-			error: "Failed to extract journey details",
-			details: (error as Error).message,
-		};
+	if (soidValue) {
+		details.fromStationId = extractStationId(soidValue);
+		details.fromStation = extractStationName(soidValue);
 	}
+
+	if (zoidValue) {
+		details.toStationId = extractStationId(zoidValue);
+		details.toStation = extractStationName(zoidValue);
+	}
+
+	// Handle date/time extraction
+	const dateTimeInfo = parseDateTime(dateValue);
+	if (dateTimeInfo.date) details.date = dateTimeInfo.date;
+	if (dateTimeInfo.time && !details.time) details.time = dateTimeInfo.time;
+	if (timeValue && !details.time) details.time = timeValue;
+
+	if (classValue) details.class = parseInt(classValue, 10);
+
+	return details;
 }
 
 function displayJourneyInfo(journeyDetails: ExtractedData) {
@@ -151,32 +164,22 @@ function displayJourneyInfo(journeyDetails: ExtractedData) {
 	console.log(formatInfo);
 }
 
-async function getResolvedUrlBrowserless(url: string) {
-	const vbid = new URL(url).searchParams.get("vbid");
-
-	if (!vbid) {
-		throw new Error("No vbid parameter found in URL");
-	}
-
-	const vbidRequest = await fetchAndValidateJson({
-		url: `https://www.bahn.de/web/api/angebote/verbindung/${vbid}`,
-		schema: vbidSchema,
-	});
-
-	const cookies = vbidRequest.response.headers.getSetCookie();
-	const { data } = await parseHinfahrtReconWithAPI(vbidRequest.data, cookies);
-
+function buildJourneySearchUrl(
+	reconResponse: ReconResponse,
+	verbindungenResponse: VerbindungResponse
+): string {
 	const newUrl = new URL("https://www.bahn.de/buchung/fahrplan/suche");
 
 	// Use hash parameters for consistency with DB URLs
 	const hashParams = new URLSearchParams();
 
 	// Find first segment with halte data for start station
-	const firstSegmentWithHalte = data.verbindungen[0].verbindungsAbschnitte.find(
-		(segment) => segment.halte.length > 0
-	);
+	const firstSegmentWithHalte =
+		reconResponse.verbindungen[0].verbindungsAbschnitte.find(
+			(segment) => segment.halte.length > 0
+		);
 	const lastSegmentWithHalte =
-		data.verbindungen[0].verbindungsAbschnitte.findLast(
+		reconResponse.verbindungen[0].verbindungsAbschnitte.findLast(
 			(segment) => segment.halte.length > 0
 		);
 
@@ -188,8 +191,8 @@ async function getResolvedUrlBrowserless(url: string) {
 	hashParams.set("zoid", lastSegmentWithHalte.halte.at(-1)!.id);
 
 	// Add date information from the booking
-	if (vbidRequest.data.hinfahrtDatum) {
-		hashParams.set("hd", vbidRequest.data.hinfahrtDatum);
+	if (verbindungenResponse.hinfahrtDatum) {
+		hashParams.set("hd", verbindungenResponse.hinfahrtDatum);
 	}
 
 	newUrl.hash = hashParams.toString();

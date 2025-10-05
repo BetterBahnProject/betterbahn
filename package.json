@@ -15,25 +15,30 @@
     "db-hafas-stations": "^2.0.0",
     "db-vendo-client": "^6.8.2",
     "next": "15.5.4",
+    "puppeteer": "^24.22.3",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "user-agents": "^1.1.665"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "24.6.0",
     "@types/react": "^19.1.11",
     "@types/react-dom": "^19.1.8",
+    "@types/user-agents": "^1.0.4",
     "oxlint": "^1.19.0",
     "tailwindcss": "^4",
     "typescript": "^5.9.2",
     "zod": "^4.1.8"
   },
-	"devEngines": {
-		"packageManager": {
-			"name": "pnpm",
-			"version": "10.15.0",
-			"onFail": "download"
-		}
-	},
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "10.15.0",
+      "onFail": "download"
+    }
+  },
   "packageManager": "pnpm@10.15.0+sha512.486ebc259d3e999a4e8691ce03b5cac4a71cbeca39372a9b762cb500cfdf0873e2cb16abe3d951b1ee2cf012503f027b98b6584e4df22524e0c7450d9ec7aa7b"
 }

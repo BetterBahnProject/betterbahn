@@ -102,9 +102,31 @@ export const validatedVendoJourneySchema = z.object({
 export type VendoJourney = z.infer<typeof vendoJourneySchema>;
 export type ValidatedVendoJourney = z.infer<typeof validatedVendoJourneySchema>;
 
-export const vbidSchema = z.object({
+export const VerbindungResponseSchema = z.object({
 	hinfahrtRecon: z.string(),
 	hinfahrtDatum: z.string(),
 });
 
-export type VbidSchema = z.infer<typeof vbidSchema>;
+export type VerbindungResponse = z.infer<typeof VerbindungResponseSchema>;
+
+const reconLegSchema = z.object({
+	halte: z
+		.array(
+			z.object({
+				id: z.string(),
+			})
+		)
+		.min(0), // Allow empty arrays for walking segments or transfers
+});
+
+export const reconResponseSchema = z.object({
+	verbindungen: z
+		.array(
+			z.object({
+				verbindungsAbschnitte: z.array(reconLegSchema).min(1),
+			})
+		)
+		.min(1),
+});
+
+export type ReconResponse = z.infer<typeof reconResponseSchema>;

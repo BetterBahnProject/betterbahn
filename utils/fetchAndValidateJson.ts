@@ -1,4 +1,5 @@
-import { type ZodType, prettifyError } from "zod/v4";
+import z, { type ZodType } from "zod/v4";
+import { validateJson } from "./validateJson";
 
 export const fetchAndValidateJson = async <
 	T extends ZodType,
@@ -41,25 +42,21 @@ export const fetchAndValidateJson = async <
 	}
 
 	let json: unknown;
-
 	try {
 		json = await response.json();
 	} catch {
 		throw new Error(`Failed to parse JSON of fetch ${url}`);
 	}
 
-	const validationResult = schema.safeParse(json);
-
-	if (!validationResult.success) {
-		throw new Error(
-			`Validation of fetch ${url} failed: ${prettifyError(
-				validationResult.error
-			)}`
-		);
+	let data: z.infer<typeof schema>;
+	try {
+		data = validateJson(schema, json);
+	} catch (error) {
+		throw new Error(`Validation of fetch ${url} failed.`, { cause: error });
 	}
 
 	return {
 		response,
-		data: validationResult.data,
+		data,
 	};
 };
