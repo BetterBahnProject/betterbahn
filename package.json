@@ -23,7 +23,7 @@
     "@types/node": "24.6.0",
     "@types/react": "^19.1.11",
     "@types/react-dom": "^19.1.8",
-    "oxlint": "^1.19.0",
+    "oxlint": "^1.20.0",
     "tailwindcss": "^4",
     "typescript": "^5.9.2",
     "zod": "^4.1.8"
