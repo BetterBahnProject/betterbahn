@@ -1,14 +1,8 @@
-import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
-import { journeys } from "../journeys/journeys";
-import { parseUrl } from "../parseUrl";
-import { splitJourney } from "../splitJourney/splitJourney";
 import { t } from "@/utils/trpc-init";
+import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
+import { combi } from "../combi/combi";
 
-const appRouter = t.router({
-	journeys,
-	splitJourney,
-	parseUrl,
-});
+const appRouter = t.router({ combi });
 
 export type AppRouter = typeof appRouter;
 

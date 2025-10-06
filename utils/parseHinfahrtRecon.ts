@@ -3,7 +3,7 @@ import { z } from "zod/v4";
 import type { VbidSchema } from "./schemas";
 import { fetchAndValidateJson } from "./fetchAndValidateJson";
 
-export const parseHinfahrtRecon = (hinfahrtRecon: string) => {
+const _parseHinfahrtRecon = (hinfahrtRecon: string) => {
 	/**
 	 * This is an attempt to parse the hinfahrtRecon value in contrast to the straight-forward
 	 * regex of parseHinfartReconCrude().
@@ -116,7 +116,7 @@ export const parseHinfahrtReconWithAPI = async (
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json",
-			"Cookie": cookies.join(" "),
+			Cookie: cookies.join(" "),
 		},
 		body: {
 			klasse: "KLASSE_2",

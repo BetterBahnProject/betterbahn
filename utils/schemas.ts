@@ -50,8 +50,9 @@ const dateOrDateStringSchema = z
 	.or(z.date());
 
 const stopoverSchema = z.object({
-	arrival: dateOrDateStringSchema.optional(),
-	departure: dateOrDateStringSchema.optional(),
+	// TODO test removing optional()
+	arrival: dateOrDateStringSchema.nullable().optional(),
+	departure: dateOrDateStringSchema.nullable().optional(),
 	stop: vendoStopSchema.optional(),
 	loadFactor: z.unknown(),
 });
@@ -83,20 +84,7 @@ export const vendoJourneySchema = z.object({
 	duration: z.unknown().optional(),
 });
 
-// Schema for journeys that require valid origin/destination IDs
-const validatedVendoLegSchema = commonLegSchema.extend({
-	origin: originOrDestinationSchema,
-	destination: originOrDestinationSchema,
-});
-
-export const validatedVendoJourneySchema = z.object({
-	legs: z.array(validatedVendoLegSchema).min(1),
-	price: vendoPriceSchema.optional(),
-	duration: z.unknown().optional(),
-});
-
 export type VendoJourney = z.infer<typeof vendoJourneySchema>;
-export type ValidatedVendoJourney = z.infer<typeof validatedVendoJourneySchema>;
 
 export const vbidSchema = z.object({
 	hinfahrtRecon: z.string(),

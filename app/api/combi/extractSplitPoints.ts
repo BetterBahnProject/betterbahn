@@ -1,6 +1,5 @@
 import type { VendoJourney } from "@/utils/schemas";
 import type { SplitPoint, TrainLine } from "@/utils/types";
-import { VERBOSE } from "./splitJourney";
 import { TRPCError } from "@trpc/server";
 
 export function extractSplitPoints(journey: VendoJourney) {
@@ -49,10 +48,6 @@ export function extractSplitPoints(journey: VendoJourney) {
 			code: "INTERNAL_SERVER_ERROR",
 			message: "No split points found",
 		});
-	}
-
-	if (VERBOSE) {
-		console.log(`Extracted ${uniqueStops.length} unique split candidates.`);
 	}
 
 	return uniqueStops;

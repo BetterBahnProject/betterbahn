@@ -6,6 +6,7 @@ import { getStationName } from "@/utils/journeyUtils";
 import { formatPriceDE } from "@/utils/priceUtils";
 import type { VendoJourney } from "@/utils/schemas";
 import { useState } from "react";
+import { useUrlParams } from "../discount/useUrlParams";
 import { getOptionsToShow } from "./getOptionsToShow";
 import { Segment } from "./Segment";
 
@@ -14,19 +15,15 @@ export const SplitOptions = ({
 	splitOptions,
 	originalJourney,
 	loadingSplits,
-	hasDeutschlandTicket,
-	travelClass,
-	bahnCard,
 }: {
 	splitOptions: SplitAnalysis[];
 	originalJourney: VendoJourney;
 	loadingSplits: unknown;
-	hasDeutschlandTicket: boolean;
-	travelClass: string;
-	bahnCard: string | null;
 }) => {
 	// State für erweiterte Optionsanzeige (erste Option standardmäßig erweitert)
 	const [expandedOption, setExpandedOption] = useState<number | null>(0);
+
+	const { hasDeutschlandTicket, travelClass, bahnCard } = useUrlParams();
 
 	const optionsToDisplay = getOptionsToShow({
 		splitOptions,
