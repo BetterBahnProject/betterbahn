@@ -46,8 +46,8 @@ importers:
         specifier: ^5.9.2
         version: 5.9.2
       zod:
-        specifier: ^4.1.8
-        version: 4.1.11
+        specifier: ^4.1.12
+        version: 4.1.12
 
 packages:
 
@@ -794,8 +794,8 @@ packages:
     resolution: {integrity: sha512-YgvUTfwqyc7UXVMrB+SImsVYSmTS8X/tSrtdNZMImM+n7+QTriRXyXim0mBrTXNeqzVF0KWGgHPeiyViFFrNDw==}
     engines: {node: '>=18'}
 
-  zod@4.1.11:
-    resolution: {integrity: sha512-WPsqwxITS2tzx1bzhIKsEs19ABD5vmCVa4xBo2tq/SrV4RNZtfws1EnCWQXM6yh8bD08a1idvkB5MZSBiZsjwg==}
+  zod@4.1.12:
+    resolution: {integrity: sha512-JInaHOamG8pt5+Ey8kGmdcAcg3OL9reK8ltczgHTAwNhMys/6ThXHityHxVV2p3fkw/c+MAvBHFVYHFZDmjMCQ==}
 
 snapshots:
 
@@ -1442,4 +1442,4 @@ snapshots:
 
   yallist@5.0.0: {}
 
-  zod@4.1.11: {}
+  zod@4.1.12: {}

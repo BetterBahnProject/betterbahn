@@ -26,7 +26,7 @@
     "oxlint": "^1.20.0",
     "tailwindcss": "^4",
     "typescript": "^5.9.2",
-    "zod": "^4.1.8"
+    "zod": "^4.1.12"
   },
 	"devEngines": {
 		"packageManager": {
