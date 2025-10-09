@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { extractUrlFromText } from "./extractUrlFromText";
 import { URLInput } from "./URLInput";
 import { useLocalStorage } from "./useLocalStorage";
 
@@ -33,9 +32,10 @@ export const SearchForm = () => {
 			return;
 		}
 
-		const extractedUrl = extractUrlFromText(url);
+		const regexResult = url.match(/vbid=([\w-]+)/);
+		const vbid = regexResult?.[1];
 
-		if (!extractedUrl) {
+		if (!vbid) {
 			setUrlParseError(
 				"Keine gültige DB-Buchungs-URL gefunden. Bitte fügen Sie Text mit einem Deutsche Bahn Buchungslink ein (von bahn.de mit /buchung/start Pfad) oder überprüfen Sie, ob Ihre URL korrekt ist."
 			);
@@ -43,13 +43,16 @@ export const SearchForm = () => {
 		}
 
 		const searchParams = new URLSearchParams({
-			url: extractedUrl,
-			bahnCard,
+			vbid,
 			hasDeutschlandTicket: String(hasDeutschlandTicket),
 			passengerAge: String(passengerAge),
 			travelClass,
 			// autoSearch: "true", // Flag to indicate auto-search should happen
 		});
+
+		if (bahnCard !== "none") {
+			searchParams.set("bahnCard", bahnCard);
+		}
 
 		router.push(`/discount?${searchParams.toString()}`);
 	};

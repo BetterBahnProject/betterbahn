@@ -1,10 +1,10 @@
-import type { VendoJourney } from "@/utils/schemas";
+import type { SplitAnalysis } from "@/app/api/analyzeJourney";
 import {
-	legIsFlixTrain,
 	isLegCoveredByDeutschlandTicket,
+	legIsFlixTrain,
 } from "@/utils/deutschlandTicketUtils";
 import { getJourneyLegsWithTransfers } from "@/utils/journeyUtils";
-import type { SplitOption } from "@/utils/types";
+import type { VendoJourney } from "@/utils/schemas";
 
 /** Berechne Split-Option Preisgestaltung mit Deutschland-Ticket Logik */
 export const calculateSplitOptionPricing = ({
@@ -12,10 +12,27 @@ export const calculateSplitOptionPricing = ({
 	hasDeutschlandTicket,
 	originalJourney,
 }: {
-	splitOption: SplitOption;
+	splitOption: SplitAnalysis;
 	hasDeutschlandTicket: boolean;
 	originalJourney: VendoJourney;
 }) => {
+	let totalPrice: number | null = null; // null = unknown
+
+	if (
+		splitOption.segments[0].price?.amount !== undefined &&
+		splitOption.segments[1].price?.amount !== undefined
+	) {
+		totalPrice =
+			splitOption.segments[0].price.amount +
+			splitOption.segments[1].price.amount;
+	}
+
+	let savings: number | null = null;
+
+	if (totalPrice !== null && originalJourney.price?.amount !== undefined) {
+		savings = originalJourney.price.amount - totalPrice;
+	}
+
 	if (!splitOption || !splitOption.segments) {
 		return {
 			...splitOption,
@@ -24,9 +41,9 @@ export const calculateSplitOptionPricing = ({
 			cannotShowPrice: false,
 			hasPartialPricing: false,
 			segmentsWithoutPricing: [] as number[],
-			adjustedTotalPrice: splitOption?.totalPrice || 0,
-			adjustedSavings: splitOption?.savings || 0,
-			hasFlixTrains: null
+			adjustedTotalPrice: totalPrice,
+			adjustedSavings: savings,
+			hasFlixTrains: null,
 		};
 	}
 
@@ -71,7 +88,8 @@ export const calculateSplitOptionPricing = ({
 		let totalSegments = splitOption.segments.length;
 
 		splitOption.segments.forEach((segment, index) => {
-			const hasPrice = segment.price && segment.price.amount != null;
+			const hasPrice = segment.price;
+
 			const segmentHasFlixTrain = getJourneyLegsWithTransfers(segment).some(
 				(leg) => legIsFlixTrain(leg)
 			);
@@ -91,8 +109,8 @@ export const calculateSplitOptionPricing = ({
 			segmentsWithPrice > 0 && segmentsWithPrice < totalSegments;
 	}
 
-	let adjustedTotalPrice = splitOption.totalPrice || 0;
-	let adjustedSavings = splitOption.savings || 0;
+	let adjustedTotalPrice = totalPrice;
+	let adjustedSavings = savings;
 
 	if (originalJourney) {
 		// The API already returns prices with BahnCard discounts applied
@@ -127,7 +145,12 @@ export const calculateSplitOptionPricing = ({
 			adjustedTotalPrice = partialTotalPrice;
 		}
 
-		adjustedSavings = Math.max(0, originalJourneyApiPrice - adjustedTotalPrice);
+		if (adjustedTotalPrice !== null) {
+			adjustedSavings = Math.max(
+				0,
+				originalJourneyApiPrice - adjustedTotalPrice
+			);
+		}
 	}
 
 	return {

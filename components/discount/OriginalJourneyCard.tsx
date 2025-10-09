@@ -1,28 +1,24 @@
 import { isLegCoveredByDeutschlandTicket } from "@/utils/deutschlandTicketUtils";
 import {
+	formatDuration,
 	formatPriceWithTwoDecimals,
 	formatTime,
-	formatDuration,
 	getChangesCount,
 } from "@/utils/formatUtils";
-import type { ExtractedData } from "@/utils/types";
 import type { VendoJourney } from "@/utils/schemas";
 import { JourneyIcon } from "./JourneyIcon";
 import { JourneyInfoRow } from "./JourneyInfoRow";
+import { useUrlParams } from "./useUrlParams";
 
-interface OriginalJourneyCardProps {
-	extractedData: ExtractedData;
+interface Props {
 	selectedJourney: VendoJourney;
 }
 
-export function OriginalJourneyCard({
-	extractedData,
-	selectedJourney,
-}: OriginalJourneyCardProps) {
-	if (!extractedData) return null;
+export const OriginalJourneyCard = ({ selectedJourney }: Props) => {
+	const { hasDeutschlandTicket, travelClass, bahnCard } = useUrlParams();
 
-	const { hasDeutschlandTicket } = extractedData;
 	const trainLegs = selectedJourney.legs?.filter((leg) => !leg.walking) || [];
+
 	const isFullyCoveredByDticket =
 		hasDeutschlandTicket &&
 		trainLegs.length > 0 &&
@@ -31,6 +27,7 @@ export function OriginalJourneyCard({
 		);
 
 	const formattedPrice = formatPriceWithTwoDecimals(selectedJourney.price);
+
 	let priceDisplay;
 
 	if (formattedPrice !== null) {
@@ -53,10 +50,10 @@ export function OriginalJourneyCard({
 								<span className="font-bold text-xl ">
 									{selectedJourney.legs?.[0]
 										? formatTime(selectedJourney.legs[0].departure)
-										: extractedData.time || ""}
+										: ""}
 								</span>
 								<span className="ml-3 text-lg ">
-									{extractedData.fromStation}
+									{selectedJourney.legs[0].origin?.name}
 								</span>
 							</div>
 							<div className="text-right">
@@ -91,7 +88,9 @@ export function OriginalJourneyCard({
 										  )
 										: ""}
 								</span>
-								<span className="ml-3 text-lg ">{extractedData.toStation}</span>
+								<span className="ml-3 text-lg ">
+									{selectedJourney.legs.at(-1)?.destination?.name}
+								</span>
 							</div>
 						</div>
 					</div>
@@ -102,19 +101,17 @@ export function OriginalJourneyCard({
 					<div className="grid grid-cols-2 gap-4 text-sm">
 						<div>
 							<p className="">Klasse</p>
-							<p className="">{extractedData.travelClass || "2"}. Klasse</p>
+							<p className="">{travelClass}. Klasse</p>
 						</div>
 						<div>
 							<p className="">BahnCard</p>
 							<p className="">
-								{extractedData.bahnCard === "none"
-									? "Keine"
-									: `BahnCard ${extractedData.bahnCard}`}
+								{bahnCard === null ? "Keine" : `BahnCard ${bahnCard}`}
 							</p>
 						</div>
 					</div>
 
-					{extractedData.hasDeutschlandTicket && (
+					{hasDeutschlandTicket && (
 						<div className="mt-2">
 							<p className=" text-sm">Deutschland-Ticket</p>
 							<p className="text-green-600 font-medium">✓ Vorhanden</p>
@@ -141,4 +138,4 @@ export function OriginalJourneyCard({
 			)}
 		</div>
 	);
-}
+};

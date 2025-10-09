@@ -20,7 +20,11 @@ declare module "db-vendo-client" {
 		transfers: number;
 		firstClass: boolean;
 		departure?: Date;
-		loyaltyCard?: unknown;
+		loyaltyCard?: {
+			type: string;
+			discount: number;
+			class: number;
+		};
 		age?: number;
 		deutschlandTicketDiscount?: boolean;
 		deutschlandTicketConnectionsOnly?: boolean;

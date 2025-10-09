@@ -13,12 +13,12 @@ interface Station {
 }
 
 /**
- * Formats a date string for DB URL parameters
- * @param {string} date - ISO date string
+ * Formats a date for DB URL parameters
  * @returns {string} Formatted date string
  */
-function formatDate(date: string): string {
+function formatDate(date: Date): string {
 	let formattedDate = date
+		.toISOString()
 		.replace(/\+\d{2}:\d{2}$/, "")
 		.replace(/Z$/, "")
 		.replace(/\.\d{3}/, "");
@@ -90,9 +90,15 @@ export function createSegmentSearchUrl(
 	// Modern URL building with proper validation
 
 	// Properly validate required data with explicit checks for optional properties
-	if (!firstLeg?.origin || !firstLeg.origin.name || 
-		!lastLeg?.destination || !lastLeg.destination.name) {
-		throw new Error('Missing origin, destination, or station names in journey legs');
+	if (
+		!firstLeg?.origin ||
+		!firstLeg.origin.name ||
+		!lastLeg?.destination ||
+		!lastLeg.destination.name
+	) {
+		throw new Error(
+			"Missing origin, destination, or station names in journey legs"
+		);
 	}
 
 	const parts = [
@@ -173,7 +179,11 @@ function addStationId(station: Station, type: string, parts: string[]) {
 	const stationId =
 		station.id || station.stationId || station.uicCode || station.evaId;
 
-	if (stationId && station.name && shouldUseStationId(stationId, station.name)) {
+	if (
+		stationId &&
+		station.name &&
+		shouldUseStationId(stationId, station.name)
+	) {
 		const stationData = createStationId({
 			name: station.name,
 			id: stationId,
@@ -186,4 +196,3 @@ function addStationId(station: Station, type: string, parts: string[]) {
 
 	return null;
 }
-
