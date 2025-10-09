@@ -4,8 +4,12 @@ import type { VendoJourney, VendoPrice } from "@/utils/schemas";
  * Formatiert Zeit für deutsche Anzeige (HH:MM)
  */
 export const formatTime = (dateTime?: Date) => {
+	/**
+	 * TODO check if leg.departure / leg.arrival are always
+	 * defined. if true, make dateTime non-optional
+	 */
 	if (!dateTime) {
-		return "";
+		return "?";
 	}
 
 	return dateTime.toLocaleTimeString("de-DE", {
@@ -31,13 +35,13 @@ export const formatDuration = (journey: VendoJourney) => {
  * Zählt Anzahl der Umstiege
  */
 export const getChangesCount = (journey: VendoJourney) => {
-	if (!journey?.legs) return 0;
+	if (!journey?.legs) {
+		return 0;
+	}
+
 	return Math.max(0, journey.legs.length - 1);
 };
 
-/**
- * Formatiert Preis mit zwei Dezimalstellen und deutschen Komma
- */
 export const formatPriceWithTwoDecimals = (price?: VendoPrice | number) => {
 	if (!price && price !== 0) {
 		return null;

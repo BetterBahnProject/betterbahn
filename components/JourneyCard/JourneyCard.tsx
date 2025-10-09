@@ -6,21 +6,23 @@ import type { VendoJourney } from "@/utils/schemas";
 import { getTransferStations } from "./getTransferStations";
 import { JourneyDuration } from "./JourneyDuration";
 import { LegDetails } from "./LegDetails";
+import { useUrlParams } from "../discount/useUrlParams";
 
 export const JourneyCard = ({
 	journey,
-	travelClass,
 	isSelected = false,
+	onClick,
 }: {
 	journey: VendoJourney;
-	travelClass?: string;
 	isSelected?: boolean;
+	onClick: () => void;
 }) => {
 	const firstLeg = journey.legs.at(0);
 	const lastLeg = journey.legs.at(-1);
 	const nonWalkingLegs = journey.legs.filter((leg) => !leg.walking);
 	const transferCountWithoutWalking = Math.max(0, nonWalkingLegs.length - 1);
 	const transferStationsWithoutWalking = getTransferStations(nonWalkingLegs);
+	const { travelClass } = useUrlParams();
 
 	const priceDisplay =
 		journey.price?.amount === undefined
@@ -29,14 +31,15 @@ export const JourneyCard = ({
 
 	return (
 		<div
-			className={`border rounded-lg p-4 transition-all duration-200 ${
+			className={`border rounded-lg p-4 transition-all duration-200 bg-background border-foreground/30 ${
 				isSelected
-					? "border-blue-500 bg-background shadow-md"
-					: "border-foreground/30 bg-background/60 hover:shadow-md hover:bg-foreground/10"
+					? "shadow-md"
+					: "hover:shadow-md hover:bg-foreground/5 cursor-pointer"
 			}`}
+			onClick={onClick}
 		>
 			{/* Journey Header - Similar to SplitOptions */}
-			<div className="flex justify-between items-center mb-2">
+			<div className="flex justify-between">
 				<div>
 					<span className="text-sm text-foreground/60">Verbindung:</span>
 					<span className="text-lg font-bold text-blue-600 ml-2">
@@ -72,9 +75,9 @@ export const JourneyCard = ({
 			</div>
 
 			{/* Journey Legs - Similar to SplitOptions segments */}
-			<div className="text-xs text-foreground/60 space-y-1 mb-3">
+			<div className="text-xs text-foreground/60 space-y-3 mb-3">
 				{journey.legs
-					?.filter((leg) => !leg.walking)
+					.filter((leg) => !leg.walking)
 					.map((leg, legIndex) => (
 						<LegDetails key={legIndex} leg={leg} legIndex={legIndex} />
 					))}

@@ -1,4 +1,4 @@
-import type { SplitAnalysis } from "@/app/api/journeys/analyzeSingleSplit";
+import type { SplitAnalysis } from "@/app/api/analyzeJourney";
 import type { VendoJourney } from "@/utils/schemas";
 import { calculateSplitOptionPricing } from "./calculateSplitOptionPricing";
 
@@ -27,7 +27,7 @@ export const getOptionsToShow = ({
 	}));
 
 	// Sort by savings (highest first)
-	const sortedOptions = optionsWithPricing.sort(
+	const sortedOptions = optionsWithPricing.toSorted(
 		(a, b) =>
 			(b.pricing.adjustedSavings ?? 0) - (a.pricing.adjustedSavings ?? 0)
 	);

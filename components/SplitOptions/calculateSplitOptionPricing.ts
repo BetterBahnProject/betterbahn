@@ -1,4 +1,4 @@
-import type { SplitAnalysis } from "@/app/api/journeys/analyzeSingleSplit";
+import type { SplitAnalysis } from "@/app/api/analyzeJourney";
 import {
 	isLegCoveredByDeutschlandTicket,
 	legIsFlixTrain,

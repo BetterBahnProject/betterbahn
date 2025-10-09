@@ -1,6 +1,6 @@
 "use client";
 
-import type { SplitAnalysis } from "@/app/api/journeys/analyzeSingleSplit";
+import type { SplitAnalysis } from "@/app/api/analyzeJourney";
 import { formatDuration, formatTime } from "@/utils/formatUtils";
 import { getStationName } from "@/utils/journeyUtils";
 import { formatPriceDE } from "@/utils/priceUtils";

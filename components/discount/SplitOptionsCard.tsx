@@ -1,8 +1,9 @@
+import type { SplitAnalysis } from "@/app/api/analyzeJourney";
 import { SplitOptions } from "@/components/SplitOptions/SplitOptions";
 import type { VendoJourney } from "@/utils/schemas";
 
 interface Props {
-	splitOptions: [];
+	splitOptions: SplitAnalysis[];
 	selectedJourney: VendoJourney;
 	loading: boolean;
 }

@@ -57,21 +57,17 @@ const stopoverSchema = z.object({
 	loadFactor: z.unknown(),
 });
 
-const commonLegSchema = z.object({
+const vendoLegSchema = z.object({
 	departure: dateOrDateStringSchema,
 	line: vendoLineSchema.optional(),
 	arrival: dateOrDateStringSchema,
 	mode: z.string().optional(),
-	duration: z.unknown(),
 	walking: z.unknown(),
 	departurePlatform: z.string().nullable().optional(),
 	arrivalPlatform: z.string().nullable().optional(),
 	delay: z.number().optional(),
 	cancelled: z.boolean().optional(),
 	stopovers: z.array(stopoverSchema).optional(),
-});
-
-const vendoLegSchema = commonLegSchema.extend({
 	origin: originOrDestinationSchema.optional(),
 	destination: originOrDestinationSchema.optional(),
 });
