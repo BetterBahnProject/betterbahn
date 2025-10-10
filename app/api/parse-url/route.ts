@@ -159,9 +159,16 @@ async function getResolvedUrlBrowserless(url: string) {
 	}
 
 	const vbidRequest = await fetchAndValidateJson({
-		url: `https://www.bahn.de/web/api/angebote/verbindung/${vbid}`,
-		schema: vbidSchema,
-	});
+  url: `https://www.bahn.de/web/api/angebote/verbindung/${vbid}`,
+  schema: vbidSchema,
+  options: {
+    headers: {
+      "User-Agent":
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
+      "Accept": "application/json",
+    },
+  },
+});
 
 	const cookies = vbidRequest.response.headers.getSetCookie();
 	const { data } = await parseHinfahrtReconWithAPI(vbidRequest.data, cookies);
