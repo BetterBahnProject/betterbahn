@@ -25,7 +25,7 @@ export const getOptionsToShow = ({
 	}));
 
 	// Sort by savings (highest first)
-	const sortedOptions = optionsWithPricing.sort(
+	const sortedOptions = optionsWithPricing.toSorted(
 		(a, b) => b.pricing.adjustedSavings - a.pricing.adjustedSavings
 	);
 

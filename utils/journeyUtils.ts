@@ -121,7 +121,8 @@ export const searchForJourneys = async (
 		// Re-throw with more user-friendly message if it's a network error
 		if (typedError.message.includes("fetch")) {
 			throw new Error(
-				"Netzwerkfehler: Bitte überprüfe deine Internetverbindung"
+				"Netzwerkfehler: Bitte überprüfe deine Internetverbindung",
+				{ cause: error }
 			);
 		}
 		throw error;

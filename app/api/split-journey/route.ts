@@ -84,7 +84,7 @@ const handler = async (request: Request) => {
 	// Gibt die Ergebnisse als JSON zurück
 	return Response.json({
 		success: true,
-		splitOptions: splitOptions.sort((a, b) => b.savings - a.savings),
+		splitOptions: splitOptions.toSorted((a, b) => b.savings - a.savings),
 		originalPrice,
 	});
 };
@@ -484,7 +484,7 @@ function handleStreamingResponse(
 				const finalData = {
 					type: "complete",
 					success: true,
-					splitOptions: splitOptions.sort((a, b) => b.savings - a.savings),
+					splitOptions: splitOptions.toSorted((a, b) => b.savings - a.savings),
 					originalPrice,
 				};
 				controller.enqueue(
