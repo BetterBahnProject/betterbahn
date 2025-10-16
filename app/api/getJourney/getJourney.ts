@@ -66,7 +66,7 @@ export const getJourney = t.procedure
 			// Reiseklasse-Präferenz setzen - verwende firstClass boolean Parameter
 			firstClass: input.travelClass === 1, // true für erste Klasse, false für zweite Klasse
 			age: input.passengerAge, // Passagieralter für angemessene Preisgestaltung hinzufügen
-			departure: undefined,
+			departure: new Date(vbidRequest.data.hinfahrtDatum),
 		};
 
 		if (input.bahnCard !== null && [25, 50, 100].includes(input.bahnCard)) {

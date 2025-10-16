@@ -50,18 +50,29 @@ export const DiscountContent = () => {
 					<Journey
 						key={index}
 						journey={journey}
-						isSelected={selectedJourney === journey}
+						isSelected={
+							selectedJourney === journey || journeysQuery.data?.length === 1
+						}
 						onClick={() => setSelectedJourney(journey)}
 					/>
 				))}
 			</div>
 
-			{selectedJourney && (
+			{selectedJourney ? (
 				<ComparisonView
 					journey={selectedJourney}
 					setProgress={setAnalysisProgress}
 					setAnalysisError={setAnalysisError}
 				/>
+			) : (
+				journeysQuery.isSuccess &&
+				journeysQuery.data.length === 1 && (
+					<ComparisonView
+						journey={journeysQuery.data[0]}
+						setProgress={setAnalysisProgress}
+						setAnalysisError={setAnalysisError}
+					/>
+				)
 			)}
 		</div>
 	);

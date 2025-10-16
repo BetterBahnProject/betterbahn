@@ -74,13 +74,6 @@ export const analyzeJourney = t.procedure
 					departure: params.targetDeparture,
 				});
 
-				console.log(
-					"leg duration types",
-					(untyped as any).journeys
-						.flatMap((j: any) => j.legs)
-						.flatMap((l: any) => typeof l.duration)
-				);
-
 				const validated = z
 					.object({
 						journeys: z.array(vendoJourneySchema),
