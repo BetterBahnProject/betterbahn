@@ -144,8 +144,34 @@ export const getJourney = t.procedure
 		);
 
 		// Sort by departure time
-		// TODO move sorting to frontend?
-		return uniqueJourneys.toSorted(
+		const sortedJourneys = uniqueJourneys.toSorted(
 			(a, b) => a.legs[0].departure.getTime() - b.legs[0].departure.getTime()
+		);
+
+		// Only show journeys matching the original search time
+		const originalDepartureTime = new Date(vbidRequest.data.hinfahrtDatum);
+
+		// Find the journey that best matches the original departure time
+		const closestJourney = sortedJourneys.reduce((closest, current) => {
+			if (!closest) return current;
+			const closestDiff = Math.abs(
+				closest.legs[0].departure.getTime() - originalDepartureTime.getTime()
+			);
+			const currentDiff = Math.abs(
+				current.legs[0].departure.getTime() - originalDepartureTime.getTime()
+			);
+			return currentDiff < closestDiff ? current : closest;
+		}, sortedJourneys[0]);
+
+		if (!closestJourney) {
+			return [];
+		}
+
+		// Get the departure time of the closest journey
+		const targetDepartureTime = closestJourney.legs[0].departure.getTime();
+
+		// Return only journeys with the exact same departure time as the closest match
+		return sortedJourneys.filter(
+			(journey) => journey.legs[0].departure.getTime() === targetDepartureTime
 		);
 	});
