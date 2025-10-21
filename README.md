@@ -1,6 +1,7 @@
 # BetterBahn
 
 BetterBahn is a web app for finding the best train journeys in Germany. While split ticketing is supported to help save money, it is rather the exception. The app will be extended with many more features in the future.
+You can find out more about the project on our [website](https://betterbahn.de).
 
 ## Technology
 
@@ -86,8 +87,6 @@ BetterBahn searches for train journeys and can use split ticketing to help you f
 ## About the Author
 
 Created by [Lukas Weihrauch](https://lukasweihrauch.de).
-
-If you like what I do, consider supporting me: [ko-fi.com/lukasweihrauch](https://ko-fi.com/lukasweihrauch)
 
 ---
 
