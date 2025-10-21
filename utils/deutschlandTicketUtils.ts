@@ -94,7 +94,7 @@ const deutschlandTicketICRoutes = [
 	},
 ];
 
-export const isICRouteCoveredByDeutschlandTicket = (leg: VendoLeg) => {
+const isICRouteCoveredByDeutschlandTicket = (leg: VendoLeg) => {
 	if (!leg?.line || !leg.origin || !leg.destination) return false;
 	const product = leg.line.product?.toLowerCase();
 	if (!product || !["national", "nationalexpress"].includes(product))
@@ -133,7 +133,10 @@ export const legIsFlixTrain = (leg: VendoLeg) => {
 	return /FLX|FLIXTRAIN/.test(name + product);
 };
 
-export const isLegCoveredByDeutschlandTicket = (leg: VendoLeg, hasDeutschlandTicket: boolean) => {
+export const isLegCoveredByDeutschlandTicket = (
+	leg: VendoLeg,
+	hasDeutschlandTicket: boolean
+) => {
 	if (!hasDeutschlandTicket) return false;
 	if (leg.walking) return true;
 	if (!leg.line || legIsFlixTrain(leg)) return false; // FlixTrains never covered
