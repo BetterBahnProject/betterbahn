@@ -30,8 +30,8 @@ importers:
         specifier: ^2.0.0
         version: 2.0.0
       db-vendo-client:
-        specifier: ^6.8.2
-        version: 6.10.0
+        specifier: ^6.10.5
+        version: 6.10.5
       next:
         specifier: 15.5.4
         version: 15.5.4(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -514,8 +514,8 @@ packages:
     resolution: {integrity: sha512-GjcqpZhs+HeOvc2dnAJs2Uy3/b8zRNlvTfLCvqFe9J2JYOlQVyuYCjjdsPBTOmJol42sPToPs71wr03kTMVJDw==}
     engines: {node: '>=18'}
 
-  db-vendo-client@6.10.0:
-    resolution: {integrity: sha512-OTXlau8OPL699OWK4JYBceKtrga1wtAC5CMZUv/vxYv4vWr2KoZh4QFCVjjWqluQUcNGLhwrpAnYmanpnq+vbw==}
+  db-vendo-client@6.10.5:
+    resolution: {integrity: sha512-JK+ncFZseEBwW2HGfVIxjBKrwimgQbw4tugH6NGXnTXdHqd3xx2jYUQxXE/l2nk/qRS9mCmZuBdclIm7nc0GIg==}
     engines: {node: '>=18'}
 
   debug@4.4.3:
@@ -1228,7 +1228,7 @@ snapshots:
       ndjson: 2.0.0
       qs: 6.14.0
 
-  db-vendo-client@6.10.0:
+  db-vendo-client@6.10.5:
     dependencies:
       content-type: 1.0.5
       cross-fetch: 4.1.0

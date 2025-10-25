@@ -18,7 +18,7 @@
     "@trpc/server": "^11.5.1",
     "@trpc/tanstack-react-query": "^11.5.1",
     "db-hafas-stations": "^2.0.0",
-    "db-vendo-client": "^6.8.2",
+    "db-vendo-client": "^6.10.5",
     "next": "15.5.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -41,5 +41,5 @@
       "onFail": "download"
     }
   },
-  "packageManager": "pnpm@10.15.0+sha512.486ebc259d3e999a4e8691ce03b5cac4a71cbeca39372a9b762cb500cfdf0873e2cb16abe3d951b1ee2cf012503f027b98b6584e4df22524e0c7450d9ec7aa7b"
+  "packageManager": "pnpm@10.19.0"
 }
